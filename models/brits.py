@@ -11,10 +11,9 @@ import utils
 import argparse
 import data_loader
 
-import rits
+import models.rits as rits
 from sklearn import metrics
 
-from ipdb import set_trace
 
 SEQ_LEN = 36
 RNN_HID_SIZE = 64
@@ -66,21 +65,16 @@ class Model(nn.Module):
 
             if torch.cuda.is_available():
                 indices = indices.cuda()
-
             return tensor_.index_select(1, indices)
 
         for key in ret:
             ret[key] = reverse_tensor(ret[key])
-
         return ret
 
     def run_on_batch(self, data, optimizer):
         ret = self(data)
-
         if optimizer is not None:
             optimizer.zero_grad()
             ret['loss'].backward()
             optimizer.step()
-
         return ret
-

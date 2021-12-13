@@ -11,7 +11,6 @@ import utils
 import argparse
 import data_loader
 
-from ipdb import set_trace
 from sklearn import metrics
 
 SEQ_LEN = 49
@@ -145,38 +144,36 @@ class Model(nn.Module):
             x_h = self.hist_reg(h)
             x_loss += torch.sum(torch.abs(x - x_h) * m) / (torch.sum(m) + 1e-5)
 
-            x_c =  m * x +  (1 - m) * x_h
+            x_c = m * x + (1 - m) * x_h
 
             z_h = self.feat_reg(x_c)
             x_loss += torch.sum(torch.abs(x - z_h) * m) / (torch.sum(m) + 1e-5)
 
-            alpha = self.weight_combine(torch.cat([gamma_x, m], dim = 1))
-
-            c_h = alpha * z_h + (1 - alpha) * x_h
+            alpha = self.weight_combine(torch.cat([gamma_x, m], dim=1))  # (8)
+            c_h = alpha * z_h + (1 - alpha) * x_h   # (9)
             x_loss += torch.sum(torch.abs(x - c_h) * m) / (torch.sum(m) + 1e-5)
 
-            c_c = m * x + (1 - m) * c_h
+            c_c = m * x + (1 - m) * c_h  # (10)
 
-            inputs = torch.cat([c_c, m], dim = 1)
+            inputs = torch.cat([c_c, m], dim=1)
 
             h, c = self.rnn_cell(inputs, (h, c))
 
-            imputations.append(c_c.unsqueeze(dim = 1))
+            imputations.append(c_c.unsqueeze(dim=1))
 
-        imputations = torch.cat(imputations, dim = 1)
+        imputations = torch.cat(imputations, dim=1)  # channel wise
 
         y_h = self.out(h)
         y_loss = binary_cross_entropy_with_logits(y_h, labels, reduce = False)
         y_loss = torch.sum(y_loss * is_train) / (torch.sum(is_train) + 1e-5)
-
-        y_h = F.sigmoid(y_h)
+        y_h = y_h.sigmoid()     #F.sigmoid(y_h)
 
         return {'loss': x_loss / SEQ_LEN + y_loss * 0.3, 'predictions': y_h,\
                 'imputations': imputations, 'labels': labels, 'is_train': is_train,\
                 'evals': evals, 'eval_masks': eval_masks}
 
     def run_on_batch(self, data, optimizer):
-        ret = self(data, direct = 'forward')
+        ret = self(data, direct='forward')
 
         if optimizer is not None:
             optimizer.zero_grad()

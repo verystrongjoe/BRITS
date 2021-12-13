@@ -11,10 +11,8 @@ import utils
 import argparse
 import data_loader
 
-import rits_i
+import models.rits_i as rits_i
 from sklearn import metrics
-
-from ipdb import set_trace
 
 SEQ_LEN = 36
 RNN_HID_SIZE = 64

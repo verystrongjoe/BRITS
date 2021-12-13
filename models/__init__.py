@@ -1,1 +1,1 @@
-import rits_i, brits_i, rits, brits
+import models.rits_i, models.brits_i, models.rits, models.brits
